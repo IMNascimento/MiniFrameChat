@@ -1,0 +1,38 @@
+
+version: "3.1"
+
+intents:
+  - saudacao
+  - despedida
+  - agradecimento
+  - negar
+  - afirmar
+  - fora_do_escopo
+  - conversa_fiada
+  - insulto
+  - pedir_ajuda
+  - afirmar_politica_respeito
+
+responses:
+  utter_saudacao:
+    - text: "Olá! Como posso te ajudar hoje? 🙂"
+  utter_despedida:
+    - text: "Até mais! 👋"
+  utter_agradecimento:
+    - text: "De nada! Posso ajudar com algo mais?"
+  utter_pedir_reformulacao:
+    - text: "Não entendi bem. Pode reformular por favor?"
+  utter_fora_do_escopo:
+    - text: "Desculpe, isso foge do que eu consigo ajudar agora."
+  utter_conversa_fiada:
+    - text: "Haha, boa! Como posso te ajudar de verdade?"
+  utter_insulto_bloqueado:
+    - text: "Vamos manter o respeito. Não posso continuar com ofensas."
+  utter_politica_respeito:
+    - text: "Seguimos uma política de respeito: nada de xingamentos, ofensas ou discurso de ódio."
+  utter_ajuda:
+    - text: "Posso responder dúvidas gerais, saudações e encerrar conversa. O que você precisa?"
+
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true

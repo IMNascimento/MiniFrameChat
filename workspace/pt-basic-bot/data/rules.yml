@@ -1,0 +1,28 @@
+
+version: "3.1"
+rules:
+- rule: responder saudacao
+  steps:
+    - intent: saudacao
+    - action: utter_saudacao
+
+- rule: responder despedida
+  steps:
+    - intent: despedida
+    - action: utter_despedida
+
+- rule: bloquear insulto
+  steps:
+    - intent: insulto
+    - action: utter_insulto_bloqueado
+    - action: utter_politica_respeito
+
+- rule: fora do escopo
+  steps:
+    - intent: fora_do_escopo
+    - action: utter_fora_do_escopo
+
+- rule: fallback padrão NLU
+  steps:
+    - intent: nlu_fallback
+    - action: utter_pedir_reformulacao

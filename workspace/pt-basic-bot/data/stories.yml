@@ -1,0 +1,32 @@
+
+version: "3.1"
+stories:
+- story: cumprimento
+  steps:
+    - intent: saudacao
+    - action: utter_saudacao
+
+- story: despedida
+  steps:
+    - intent: despedida
+    - action: utter_despedida
+
+- story: agradecimento
+  steps:
+    - intent: agradecer
+    - action: utter_agradecimento
+
+- story: ajuda
+  steps:
+    - intent: pedir_ajuda
+    - action: utter_ajuda
+
+- story: conversa_fiada redireciona
+  steps:
+    - intent: conversa_fiada
+    - action: utter_conversa_fiada
+
+- story: fora do escopo
+  steps:
+    - intent: fora_do_escopo
+    - action: utter_fora_do_escopo

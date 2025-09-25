@@ -1,0 +1,66 @@
+
+version: "3.1"
+nlu:
+- intent: saudacao
+  examples: |
+    - oi
+    - olá
+    - e aí
+    - bom dia
+    - boa tarde
+    - boa noite
+    - fala aí
+- intent: despedida
+  examples: |
+    - tchau
+    - até mais
+    - até logo
+    - valeu, falou
+    - fui
+- intent: agradecer
+  examples: |
+    - obrigado
+    - valeu
+    - agradeço
+    - muito obrigado
+- intent: negar
+  examples: |
+    - não
+    - negativo
+    - acho que não
+    - prefiro que não
+- intent: afirmar
+  examples: |
+    - sim
+    - positivo
+    - claro
+    - com certeza
+- intent: fora_do_escopo
+  examples: |
+    - qual é o sentido da vida?
+    - me fala sobre meteorologia de marte
+    - você sabe tocar violão?
+- intent: conversa_fiada
+  examples: |
+    - me conta uma piada
+    - como você está?
+    - vamos conversar
+    - tá de boa?
+- intent: insulto
+  examples: |
+    - você é burro
+    - vai se ferrar
+    - idiota
+    - cala a boca
+    - seu lixo
+    - [palavrão]()
+- intent: pedir_ajuda
+  examples: |
+    - ajuda
+    - pode me ajudar?
+    - não sei por onde começar
+- intent: afirmar_politica_respeito
+  examples: |
+    - sem xingamentos
+    - vamos manter o respeito
+    - sem ofensas
