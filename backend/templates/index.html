@@ -1,0 +1,263 @@
+
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rasa Mini Framework</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>.mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}</style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+  <div class="min-h-screen grid grid-cols-12 gap-0" x-data="app()" x-init="init()">
+    <aside class="col-span-2 bg-slate-900 border-r border-slate-800 p-4">
+      <h1 class="text-xl font-bold mb-4">Projetos</h1>
+      <div class="space-y-1 max-h-[60vh] overflow-auto">
+        <template x-for="p in list" :key="p">
+          <div class="flex items-center justify-between px-2 py-1 rounded hover:bg-slate-800 cursor-pointer"
+               @click="selectProject(p)">
+            <span x-text="p"></span>
+          </div>
+        </template>
+      </div>
+      <form class="mt-4 space-y-2" @submit.prevent="create()">
+        <input class="w-full rounded bg-slate-800 px-2 py-1 text-sm" placeholder="novo-projeto" x-model="name">
+        <div class="flex gap-2">
+          <button class="flex-1 bg-blue-600 hover:bg-blue-500 rounded px-2 py-1 text-sm">Criar</button>
+          <button type="button" @click="createPt()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 rounded px-2 py-1 text-sm">PT-Basic</button>
+        </div>
+      </form>
+      <div class="mt-4 text-xs text-slate-400">
+        Dica: o template PT-Basic está em <code class="mono">workspace/pt-basic-bot</code>.
+      </div>
+      <div class="mt-4 text-xs text-slate-400" x-text="'Backend '+(backendVersion||'')"></div>
+    </aside>
+
+    <main class="col-span-10 p-4">
+      <div class="flex items-center gap-3 mb-4">
+        <h2 class="text-2xl font-semibold">Rasa Mini Framework</h2>
+        <span class="text-slate-400" x-text="project ? '· ' + project : ''"></span>
+        <span class="ml-auto text-xs text-slate-400">Modo: Docker</span>
+      </div>
+
+      <div class="grid grid-cols-12 gap-4">
+        <section class="col-span-3">
+          <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="font-semibold">Arquivos</h3>
+              <button @click="loadTree()" class="text-xs underline">atualizar</button>
+            </div>
+            <div class="space-y-1 max-h-[60vh] overflow-auto">
+              <template x-for="f in files" :key="f">
+                <div class="text-sm px-2 py-1 rounded hover:bg-slate-800 cursor-pointer flex items-center gap-2"
+                     @click="openFile(f)">
+                  <span class="mono text-slate-300" x-text="f"></span>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3 mt-4">
+            <h3 class="font-semibold mb-2">Treino / Execução</h3>
+            <div class="flex items-center gap-2">
+              <button class="bg-emerald-600 hover:bg-emerald-500 rounded px-3 py-1 text-sm" @click="train()">Train</button>
+              <input class="bg-slate-800 px-2 py-1 rounded text-sm w-20 text-center" type="number" min="5005" max="5999" x-model="desiredPort" title="Porta">
+              <button class="bg-indigo-600 hover:bg-indigo-500 rounded px-3 py-1 text-sm" @click="start()">Start</button>
+              <button class="bg-rose-600 hover:bg-rose-500 rounded px-3 py-1 text-sm" @click="stop()">Stop</button>
+            </div>
+            <div class="text-xs text-slate-400 mt-2">
+              Status: <span x-text="statusText"></span>
+            </div>
+          </div>
+        </section>
+
+        <section class="col-span-6">
+          <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3">
+            <div class="flex items-center justify-between">
+              <div class="font-semibold">Editor</div>
+              <div class="text-xs text-slate-400" x-text="currentPath"></div>
+            </div>
+            <textarea class="w-full h-[48vh] bg-slate-950 mono text-sm rounded mt-2 p-2 outline-none border border-slate-800 focus:border-blue-500"
+                      x-model="editor"></textarea>
+            <div class="flex justify-end mt-2">
+              <label class="text-xs text-slate-400 mr-2">Salvar como:</label>
+              <input class="bg-slate-800 px-2 py-1 rounded text-sm mr-2" x-model="savePath" placeholder="ex: data/nlu.yml">
+              <button class="bg-blue-600 hover:bg-blue-500 rounded px-3 py-1 text-sm" @click="save()">Salvar</button>
+            </div>
+          </div>
+
+          <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3 mt-4">
+            <div class="flex items-center justify-between">
+              <div class="font-semibold">Logs</div>
+              <button class="text-xs underline" @click="refreshLogs()">atualizar</button>
+            </div>
+            <pre class="bg-slate-950 mono text-xs rounded mt-2 p-2 h-[20vh] overflow-auto" x-text="logs"></pre>
+          </div>
+        </section>
+
+        <section class="col-span-3">
+          <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3">
+            <div class="font-semibold mb-2">Chat</div>
+            <div class="h-[48vh] overflow-auto space-y-2">
+              <template x-for="m in chat" :key="m.id">
+                <div>
+                  <div class="text-xs text-slate-400" x-text="m.role"></div>
+                  <div class="bg-slate-800 rounded px-2 py-1 text-sm" x-text="m.text"></div>
+                </div>
+              </template>
+            </div>
+            <div class="mt-2 flex gap-2">
+              <input class="flex-1 bg-slate-800 px-2 py-1 rounded text-sm" x-model="msg" placeholder="Digite...">
+              <button class="bg-blue-600 hover:bg-blue-500 rounded px-3 py-1 text-sm" @click="send()">Enviar</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- toast -->
+      <div x-show="toast" class="fixed bottom-4 right-4 bg-rose-600 text-white px-3 py-2 rounded shadow">
+        <span x-text="toast"></span>
+      </div>
+    </main>
+  </div>
+
+  <script>
+  function app(){
+    return {
+      backendVersion: '',
+      list: [], project: null,
+      files: [], editor: '', currentPath: '', savePath: '',
+      logs: '', lastJob: '', statusText: '—',
+      chat: [], msg: '', desiredPort: 5005,
+      toast: '', toastTimer: null,
+      showToast(t){ this.toast = t; clearTimeout(this.toastTimer); this.toastTimer=setTimeout(()=>this.toast='', 3500); },
+
+      async init(){
+        try{
+          const v = await fetch('/version'); const j = await v.json(); this.backendVersion = j.version;
+        }catch(e){}
+        await this.refresh();
+      },
+      async refresh(){
+        try{
+          const r = await fetch('/api/projects'); const j = await r.json();
+          if(j.error) throw new Error(j.error);
+          this.list = j.projects;
+        }catch(e){ this.showToast('Erro /api/projects: '+e.message); }
+      },
+      async selectProject(p){ this.project = p; await this.loadTree(); await this.refreshStatus(); this.logs=''; this.chat=[]; },
+      async loadTree(){
+        if(!this.project) return;
+        try{
+          const r = await fetch(`/api/projects/${this.project}/tree`);
+          if(!r.ok) throw new Error(await r.text());
+          this.files = (await r.json()).files;
+        }catch(e){ this.showToast('Erro ao carregar arquivos: '+e.message); }
+      },
+      async openFile(path){
+        if(!this.project) return;
+        try{
+          const r = await fetch(`/api/projects/${this.project}/file?path=${encodeURIComponent(path)}`);
+          if(!r.ok) throw new Error(await r.text());
+          this.editor = await r.text();
+          this.currentPath = path;
+          this.savePath = path;
+        }catch(e){ this.showToast('Erro ao abrir arquivo: '+e.message); }
+      },
+      async save(){
+        if(!this.project || !this.savePath) { this.showToast('Selecione um projeto e o caminho para salvar'); return; }
+        try{
+          const fd = new FormData();
+          fd.append('path', this.savePath);
+          fd.append('content', new Blob([this.editor], {type: 'text/plain'}), 'file.txt');
+          const r = await fetch(`/api/projects/${this.project}/file`, { method: 'POST', body: fd });
+          if(!r.ok) throw new Error(await r.text());
+          await this.loadTree();
+        }catch(e){ this.showToast('Erro ao salvar: '+e.message); }
+      },
+      async train(){
+        if(!this.project) return this.showToast('Selecione um projeto');
+        try{
+          const r = await fetch(`/api/projects/${this.project}/train`, {method:'POST'});
+          const data = await r.json();
+          if(!r.ok) throw new Error(JSON.stringify(data));
+          this.lastJob = data.job_id;
+          setTimeout(()=>this.refreshLogs(), 800);
+        }catch(e){ this.showToast('Erro no treino: '+e.message); }
+      },
+      async refreshLogs(){
+        if(!this.lastJob) return;
+        try{
+          const r = await fetch(`/api/jobs/${this.lastJob}/logs`);
+          if(r.ok){
+            this.logs = await r.text();
+          }
+        }catch(e){}
+      },
+      async start(){
+        if(!this.project) return this.showToast('Selecione um projeto');
+        try{
+          const r = await fetch(`/api/projects/${this.project}/inference/start`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({port: Number(this.desiredPort)||null})
+          });
+          const data = await r.json();
+          if(!r.ok) throw new Error(JSON.stringify(data));
+          await this.refreshStatus();
+        }catch(e){ this.showToast('Erro ao iniciar: '+e.message); }
+      },
+      async stop(){
+        if(!this.project) return this.showToast('Selecione um projeto');
+        try{
+          await fetch(`/api/projects/${this.project}/inference/stop`, {method:'POST'});
+          await this.refreshStatus();
+        }catch(e){ this.showToast('Erro ao parar: '+e.message); }
+      },
+      async refreshStatus(){
+        if(!this.project) { this.statusText = '—'; return; }
+        try{
+          const r = await fetch(`/api/projects/${this.project}/status`);
+          const s = await r.json();
+          this.statusText = s.running ? `Rodando em :${s.port} (${s.mode})` : 'Parado';
+        }catch(e){ this.statusText='Erro'; }
+      },
+      async send(){
+        if(!this.project || !this.msg) return;
+        this.chat.push({id:crypto.randomUUID(), role:'you', text: this.msg});
+        const text = this.msg; this.msg='';
+        try{
+          const r = await fetch(`/api/projects/${this.project}/chat`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({message:text})});
+          if(r.ok){
+            const data = await r.json();
+            if(Array.isArray(data)){
+              data.forEach(d => this.chat.push({id:crypto.randomUUID(), role:'bot', text: d.text || JSON.stringify(d)}));
+            }
+          } else {
+            this.chat.push({id:crypto.randomUUID(), role:'system', text: 'Inferência não está rodando.'});
+          }
+        }catch(e){ this.showToast('Erro no chat: '+e.message); }
+      },
+      async create(){
+        if(!this.name) return;
+        try{
+          const r = await fetch('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:this.name})});
+          const data = await r.json();
+          if(!r.ok) throw new Error(JSON.stringify(data));
+          this.name=''; this.refresh();
+        }catch(e){ this.showToast('Erro ao criar: '+e.message); }
+      },
+      async createPt(){
+        if(!this.name) return;
+        try{
+          const r = await fetch('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:this.name, template:'pt-basic'})});
+          const data = await r.json();
+          if(!r.ok) throw new Error(JSON.stringify(data));
+          this.name=''; this.refresh();
+        }catch(e){ this.showToast('Erro ao criar (pt): '+e.message); }
+      }
+    }
+  }
+  </script>
+</body>
+</html>
